@@ -21,3 +21,8 @@ Thumbs.db
 # Saved invoice PDFs and temporary runs
 *.pdf
 scratch/
+
+# Runtime state and logs
+data/processed.json
+data/processed-ids.json
+*.log

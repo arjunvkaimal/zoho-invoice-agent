@@ -53,18 +53,22 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
   }
 
   if (parsed.intent === 'status_query') {
+    const message = 'Status check noted. The accounts team has been alerted and will update you shortly.';
     return {
       action: 'unsupported',
       reason: 'Invoice status query not automated',
-      message: 'Status check noted. The accounts team has been alerted and will update you shortly.',
+      message,
+      reply: message,
     };
   }
 
   if (parsed.intent === 'edit_invoice') {
+    const message = 'Invoice modification requests require accountant confirmation. Your request has been forwarded.';
     return {
       action: 'unsupported',
       reason: 'Invoice amendment request not automated',
-      message: 'Invoice modification requests require accountant confirmation. Your request has been forwarded.',
+      message,
+      reply: message,
     };
   }
 
@@ -165,10 +169,15 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
   // 4. Decision: Clarify vs Create
   // Rule 3: Never create an invoice unless customer, every item, every quantity and every rate are resolved.
   if (questions.length > 0 || !resolvedCustomer || resolvedLines.length !== (parsed.lines?.length || 0)) {
+    const reply = questions.length === 1
+      ? `❓ ${questions[0]}`
+      : `❓ Clarification needed:\n` + questions.map((q) => `• ${q}`).join('\n');
+
     return {
       action: 'clarify',
       reason: questions.join(' | '),
       questions,
+      reply,
       customer: resolvedCustomer,
       lines: resolvedLines,
       unresolved: {
