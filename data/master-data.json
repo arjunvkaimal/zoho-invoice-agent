@@ -1,0 +1,36 @@
+{
+  "customers": [
+    { "name": "VK Enterprises" },
+    { "name": "Sharma Motors" },
+    { "name": "Sharma Tyres" },
+    { "name": "Gupta Auto" },
+    { "name": "Gupta Auto Spares" },
+    { "name": "Rajan Wheels" },
+    { "name": "Kerala Tyre Mart" },
+    { "name": "Mohan Auto Traders" },
+    { "name": "Joseph & Sons" },
+    { "name": "City Wheel Hub" }
+  ],
+  "items": [
+    { "name": "Alloy Wheel 17\" Lenzo - Red",    "sku": "LZ-17-RED", "rate": 4900, "hsn": "87087000" },
+    { "name": "Alloy Wheel 17\" Lenzo - Black",  "sku": "LZ-17-BLK", "rate": 4800, "hsn": "87087000" },
+    { "name": "Alloy Wheel 17\" Lenzo - Silver", "sku": "LZ-17-SLV", "rate": 4850, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Lenzo - Red",    "sku": "LZ-18-RED", "rate": 5400, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Lenzo - Black",  "sku": "LZ-18-BLK", "rate": 5300, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Lenzo - Silver", "sku": "LZ-18-SLV", "rate": 5350, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Lenzo Sport - Red", "sku": "LZS-18-RED", "rate": 5600, "hsn": "87087000" },
+    { "name": "Alloy Wheel 16\" Lenzo - Black",  "sku": "LZ-16-BLK", "rate": 4400, "hsn": "87087000" },
+    { "name": "Alloy Wheel 17\" Vossen - Black",    "sku": "VS-17-BLK", "rate": 6200, "hsn": "87087000" },
+    { "name": "Alloy Wheel 17\" Vossen - Gunmetal", "sku": "VS-17-GUN", "rate": 6300, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Vossen - Black",    "sku": "VS-18-BLK", "rate": 6900, "hsn": "87087000" },
+    { "name": "Alloy Wheel 18\" Vossen - Gunmetal", "sku": "VS-18-GUN", "rate": 7000, "hsn": "87087000" },
+    { "name": "Steel Wheel 15\" Standard - Silver", "sku": "ST-15-SLV", "rate": 1900, "hsn": "87087000" },
+    { "name": "Steel Wheel 15\" Standard - Black",  "sku": "ST-15-BLK", "rate": 1950, "hsn": "87087000" },
+    { "name": "Wheel Cap Lenzo - Red",   "sku": "WC-LZ-RED", "rate": 250, "hsn": "87089900" },
+    { "name": "Wheel Cap Lenzo - Black", "sku": "WC-LZ-BLK", "rate": 250, "hsn": "87089900" },
+    { "name": "Wheel Nut Set Chrome", "sku": "WN-CHR", "rate": 450, "hsn": "73181500" },
+    { "name": "Wheel Nut Set Black",  "sku": "WN-BLK", "rate": 480, "hsn": "73181500" },
+    { "name": "Tyre 205/55R16", "sku": "TY-205-55-16", "rate": 4200, "hsn": "40111000" },
+    { "name": "Tyre 215/55R17", "sku": "TY-215-55-17", "rate": 4900, "hsn": "40111000" }
+  ]
+}
