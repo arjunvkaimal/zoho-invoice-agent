@@ -5,12 +5,18 @@
   "type": "module",
   "main": "test-zoho.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/whatsapp.js",
+    "eval": "node src/eval.js",
+    "report": "node src/report.js",
+    "snapshot": "node src/snapshot.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^18.0.8"
+    "@whiskeysockets/baileys": "^7.0.0-rc14",
+    "dotenv": "^18.0.8",
+    "pino": "^10.4.0",
+    "qrcode-terminal": "^0.12.0"
   }
 }
