@@ -14,8 +14,13 @@ export function normalizeText(str) {
   if (!str) return '';
   return str
     .toLowerCase()
+    .replace(/\\/g, ' ')
     .replace(/\b(\d+)\s*(inch|in|-inch)\b/g, '$1')
     .replace(/["']/g, '')
+    .replace(/\bblk\b/g, 'black')
+    .replace(/\b(slv|slvr)\b/g, 'silver')
+    .replace(/\bwhls?\b/g, 'wheels')
+    .replace(/\bmotrs\b/g, 'motors')
     .replace(/[\-,\/#!$%\^&\*;:{}=\_`~()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();

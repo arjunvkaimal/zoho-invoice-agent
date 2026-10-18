@@ -31,11 +31,15 @@ Extraction rules:
 
 2. "customer_text":
    - The party / buyer name or abbreviation as typed by the rep (e.g. "VK", "Sharma motors", "Gupta Auto").
+   - Strip out conversational greetings, honorifics or prefixes (e.g. "Chetta", "Bhai", "Sir", "Boss", "Please", "Bill to", "raise inv for").
+   - Strip out regional case endings or prepositions (e.g. "-inu" in "Kerala Tyre Martinu" -> "Kerala Tyre Mart", "-ko", "-ke liye").
+   - If the message starts with "PartyName:" or "Customer: PartyName", extract PartyName as customer_text.
    - null if no customer or party is mentioned.
 
 3. "lines":
    - Extract one line per distinct product requested.
-   - "item_text": the product description as typed (e.g. "red lenzo alloy 18 inch", "black lenzo 17 wheel", "red wheel"). null if missing.
+   - "item_text": the product description as typed (e.g. "red lenzo alloy 18 inch", "black lenzo 17 wheel", "red wheel").
+   - Strip quantity prefixes (like "4x ", "4 pcs ") and rate markers (like "rt", "rate", "@", "rs") from item_text; those belong in quantity and rate fields. null if missing.
    - "quantity": integer number of units (e.g. 4, 8, 2 pcs, 10 nos). null if missing.
    - "rate": unit price / rate per piece as a number (e.g. 5200, 4800). If rate is written with "each", apply to the appropriate item(s). null if missing or unspecified.
    - "rate_same_as_last": true if the rep explicitly wrote "rate same as last time", "same rate as before", "as usual", etc. Otherwise false.
