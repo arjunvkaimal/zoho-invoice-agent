@@ -57,7 +57,7 @@ Extraction rules:
  */
 export async function parseMessage(text, options = {}) {
   const apiKey = options.apiKey || process.env.GROQ_API_KEY;
-  const model = options.model || process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = options.model || process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
 
   if (!apiKey) {
     throw new Error('GROQ_API_KEY is not set in environment or options');
