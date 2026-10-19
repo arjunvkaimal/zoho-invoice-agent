@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { parseMessage } from './llm.js';
 import { matchCandidate } from './matcher.js';
-import { createInvoice, getInvoicePdf, getCustomerInvoices } from './zoho.js';
+import { createInvoice, getInvoicePdf, getCustomerInvoices, getLastItemRate } from './zoho.js';
 
 let defaultCatalog = null;
 let defaultAliases = null;
@@ -210,6 +210,28 @@ export async function processMessage(text, options = {}) {
     : await loadCatalogAndAliases();
 
   const parseResult = await parseMessage(text, options);
+
+  // Bonus: Handle "rate same as last time" via Zoho invoice history lookup
+  if (options.lookupHistory && parseResult.parsed?.lines?.some((l) => l.rate_same_as_last)) {
+    const custMatch = matchCandidate(parseResult.parsed.customer_text, catalog.customers, {
+      aliases: aliases.customers,
+    });
+    if (custMatch.status === 'matched') {
+      for (const line of parseResult.parsed.lines) {
+        if (line.rate_same_as_last && (!line.rate || line.rate <= 0)) {
+          const itemMatch = matchCandidate(line.item_text, catalog.items, { aliases: aliases.items });
+          if (itemMatch.status === 'matched') {
+            const histRate = await getLastItemRate(custMatch.match.contact_id, itemMatch.match.item_id);
+            if (histRate) {
+              line.rate = histRate;
+              line.rate_same_as_last = false;
+            }
+          }
+        }
+      }
+    }
+  }
+
   const decision = decide(parseResult.parsed, catalog, aliases);
 
   return {

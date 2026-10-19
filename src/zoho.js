@@ -109,6 +109,23 @@ export const createItem = async (payload) => (await request('POST', '/items', { 
 export const getCustomerInvoices = (customerId) =>
   listAll('/invoices', 'invoices', { customer_id: customerId, sort_column: 'date', sort_order: 'D' });
 
+export const getInvoice = async (invoiceId) =>
+  (await request('GET', `/invoices/${invoiceId}`)).invoice;
+
+export async function getLastItemRate(customerId, itemId) {
+  try {
+    const invoices = await getCustomerInvoices(customerId);
+    for (const inv of invoices.slice(0, 5)) {
+      const detail = await getInvoice(inv.invoice_id);
+      const line = (detail.line_items || []).find((l) => l.item_id === itemId);
+      if (line && line.rate > 0) return line.rate;
+    }
+  } catch (err) {
+    console.warn(`[Zoho] Historical rate lookup failed: ${err.message}`);
+  }
+  return null;
+}
+
 /**
  * lineItems: [{ item_id, quantity, rate }]
  * status: 'draft' (default) leaves the invoice editable and unsent.
