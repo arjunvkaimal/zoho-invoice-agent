@@ -1,21 +1,81 @@
 import { readFile } from 'node:fs/promises';
 import { parseMessage } from './llm.js';
 import { matchCandidate } from './matcher.js';
-import { createInvoice, getInvoicePdf, getCustomerInvoices, getLastItemRate } from './zoho.js';
+import { getContacts, getItems, createInvoice, getInvoicePdf, getCustomerInvoices, getLastItemRate } from './zoho.js';
 
 let defaultCatalog = null;
 let defaultAliases = null;
+let lastCatalogFetchTime = 0;
+let refreshTimer = null;
 
-export async function loadCatalogAndAliases() {
-  if (!defaultCatalog) {
-    try {
-      const catBuf = await readFile(new URL('../data/catalog-snapshot.json', import.meta.url), 'utf8');
-      defaultCatalog = JSON.parse(catBuf);
-    } catch {
-      defaultCatalog = { customers: [], items: [] };
+// Default periodic refresh interval: 30 minutes
+const REFRESH_INTERVAL_MS = 30 * 60 * 1000;
+
+/**
+ * Fetch catalog live from Zoho Books.
+ * Formats into { customers: [{contact_id, name}], items: [{item_id, name, sku, rate}] }
+ */
+export async function fetchLiveCatalog() {
+  const [contacts, items] = await Promise.all([
+    getContacts(),
+    getItems(),
+  ]);
+
+  return {
+    fetchedAt: new Date().toISOString(),
+    source: 'live_zoho',
+    customers: (contacts || []).map((c) => ({
+      contact_id: c.contact_id,
+      name: c.contact_name,
+    })),
+    items: (items || []).map((i) => ({
+      item_id: i.item_id,
+      name: i.name,
+      sku: i.sku || null,
+      rate: i.rate,
+    })),
+  };
+}
+
+/**
+ * Load catalog and aliases.
+ * When live = true (or in live bot mode), fetches live from Zoho Books at startup
+ * and caches in memory. If live fetch fails (e.g. offline/network issue), falls back
+ * gracefully to the local catalog-snapshot.json.
+ *
+ * @param {Object} [opts]
+ * @param {boolean} [opts.live=false] - Whether to attempt live fetch from Zoho
+ * @param {boolean} [opts.force=false] - Force re-fetch even if already cached
+ */
+export async function loadCatalogAndAliases({ live = false, force = false } = {}) {
+  // 1. Catalog loading / refresh
+  if (!defaultCatalog || force) {
+    let loaded = false;
+
+    if (live) {
+      try {
+        console.log('[Catalog] Fetching live customers and items from Zoho Books...');
+        defaultCatalog = await fetchLiveCatalog();
+        lastCatalogFetchTime = Date.now();
+        console.log(`[Catalog] Live fetch complete: ${defaultCatalog.customers.length} customers, ${defaultCatalog.items.length} items.`);
+        loaded = true;
+      } catch (err) {
+        console.warn(`[Catalog] Live fetch from Zoho failed (${err.message}). Falling back to snapshot file.`);
+      }
+    }
+
+    if (!loaded) {
+      try {
+        const catBuf = await readFile(new URL('../data/catalog-snapshot.json', import.meta.url), 'utf8');
+        defaultCatalog = JSON.parse(catBuf);
+      } catch {
+        defaultCatalog = { customers: [], items: [] };
+      }
     }
   }
-  if (!defaultAliases) {
+
+  // 2. Aliases loading
+  if (!defaultAliases || force) {
     try {
       const aliasBuf = await readFile(new URL('../data/aliases.json', import.meta.url), 'utf8');
       defaultAliases = JSON.parse(aliasBuf);
@@ -23,7 +83,42 @@ export async function loadCatalogAndAliases() {
       defaultAliases = { customers: {}, items: {} };
     }
   }
+
   return { catalog: defaultCatalog, aliases: defaultAliases };
+}
+
+/**
+ * Starts periodic background refresh of the catalog from Zoho Books.
+ *
+ * @param {number} [intervalMs=1800000] - Interval in ms (default 30 mins)
+ */
+export function startPeriodicCatalogRefresh(intervalMs = REFRESH_INTERVAL_MS) {
+  if (refreshTimer) return; // already running
+
+  refreshTimer = setInterval(async () => {
+    try {
+      console.log('[Catalog Refresh] Running periodic sync from Zoho Books...');
+      const freshCatalog = await fetchLiveCatalog();
+      defaultCatalog = freshCatalog;
+      lastCatalogFetchTime = Date.now();
+      console.log(`[Catalog Refresh] Synced ${freshCatalog.customers.length} customers, ${freshCatalog.items.length} items from Zoho.`);
+    } catch (err) {
+      console.error(`[Catalog Refresh] Periodic refresh failed: ${err.message}. Retaining current in-memory catalog.`);
+    }
+  }, intervalMs);
+
+  // Allow node process to exit naturally if only this timer is running
+  if (refreshTimer.unref) refreshTimer.unref();
+}
+
+/**
+ * Stop the periodic refresh timer (useful in tests or shutdown)
+ */
+export function stopPeriodicCatalogRefresh() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
 }
 
 /**

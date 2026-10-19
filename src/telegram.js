@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { Bot, InputFile } from 'grammy';
-import { processMessage, createFromDecision } from './pipeline.js';
+import { processMessage, createFromDecision, loadCatalogAndAliases, startPeriodicCatalogRefresh } from './pipeline.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_ID = process.env.ALLOWED_CHAT_ID ? String(process.env.ALLOWED_CHAT_ID).trim() : null;
@@ -219,6 +219,17 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     console.error('Please create a bot with @BotFather on Telegram and add TELEGRAM_BOT_TOKEN to your .env file.');
     process.exit(1);
   }
+
+  // 1. Initial live catalog fetch from Zoho Books with local fallback
+  try {
+    await loadCatalogAndAliases({ live: true });
+    // 2. Start periodic background refresh every 30 minutes
+    startPeriodicCatalogRefresh(30 * 60 * 1000);
+    console.log('🔄 Periodic catalogue auto-refresh enabled (every 30 mins).');
+  } catch (err) {
+    console.warn(`[Catalog Warning] Startup sync issue: ${err.message}. Proceeding with cached snapshot.`);
+  }
+
   const bot = createTelegramBot();
   bot.start({
     onStart: (botInfo) => {

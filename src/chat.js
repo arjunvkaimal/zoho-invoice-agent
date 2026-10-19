@@ -1,7 +1,7 @@
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { processMessage, createFromDecision } from './pipeline.js';
+import { processMessage, createFromDecision, loadCatalogAndAliases } from './pipeline.js';
 
 const ACTUALLY_CREATE = process.argv.includes('--create');
 
@@ -11,6 +11,10 @@ console.log(`Mode: ${ACTUALLY_CREATE ? '⚡ LIVE CREATION (--create: real Zoho d
 console.log('Type any message as a sales rep and press Enter.');
 console.log('Type "exit" or "quit" to stop.');
 console.log('===============================================================\n');
+
+if (ACTUALLY_CREATE) {
+  await loadCatalogAndAliases({ live: true });
+}
 
 const rl = readline.createInterface({ input, output });
 

@@ -72,51 +72,53 @@ async function sendTestMessage({ text, messageId, chatId = -1001234567890, isBot
   await new Promise((r) => setTimeout(r, 4500));
 }
 
+const baseId = Math.floor(Date.now() / 1000) % 100000;
+
 console.log('--- Test 1: Ignore slash command ---');
 {
-  await sendTestMessage({ text: '/help', messageId: 101 });
+  await sendTestMessage({ text: '/help', messageId: baseId + 1 });
   assert(sentCalls.length === 0, 'Slash command /help was ignored without response');
 }
 
 console.log('\n--- Test 2: Ignore bot message ---');
 {
-  await sendTestMessage({ text: 'VK 4 pcs red lenzo 18 5200', messageId: 102, isBot: true });
+  await sendTestMessage({ text: 'VK 4 pcs red lenzo 18 5200', messageId: baseId + 2, isBot: true });
   assert(sentCalls.length === 0, 'Bot message was ignored without response');
 }
 
 console.log('\n--- Test 3: Ignore private/DM message ---');
 {
-  await sendTestMessage({ text: 'VK 4 pcs red lenzo 18 5200', messageId: 103, chatType: 'private' });
+  await sendTestMessage({ text: 'VK 4 pcs red lenzo 18 5200', messageId: baseId + 3, chatType: 'private' });
   assert(sentCalls.length === 0, 'Direct message (private chat) was ignored');
 }
 
 console.log('\n--- Test 4: Casual chatter stays silent ---');
 {
-  await sendTestMessage({ text: 'ok thanks team', messageId: 104 });
+  await sendTestMessage({ text: 'ok thanks team', messageId: baseId + 4 });
   assert(sentCalls.filter(c => c.method === 'sendMessage').length === 0, 'Casual chatter was silently ignored');
 }
 
 console.log('\n--- Test 5: Ambiguous order triggers clarification quoting original message ---');
 {
-  await sendTestMessage({ text: 'Sharma / 4 pcs red lenzo alloy 18 inch / rate 5200', messageId: 105 });
+  await sendTestMessage({ text: 'Sharma / 4 pcs red lenzo alloy 18 inch / rate 5200', messageId: baseId + 5 });
   const reply = sentCalls.find(c => c.method === 'sendMessage');
   assert(reply && reply.payload.text.includes('Which customer did you mean for "Sharma"'), 'Sent clarification for ambiguous customer');
-  assert(reply && reply.payload.reply_parameters?.message_id === 105, 'Quoted original message ID in reply');
+  assert(reply && reply.payload.reply_parameters?.message_id === baseId + 5, 'Quoted original message ID in reply');
 }
 
 console.log('\n--- Test 6: Deduplication prevents reprocessing same message ID ---');
 {
-  await sendTestMessage({ text: 'Sharma / 4 pcs red lenzo alloy 18 inch / rate 5200', messageId: 105 });
+  await sendTestMessage({ text: 'Sharma / 4 pcs red lenzo alloy 18 inch / rate 5200', messageId: baseId + 5 });
   assert(sentCalls.length === 0, 'Replayed message ID was skipped by deduplication');
 }
 
 console.log('\n--- Test 7: Clear order creates stubbed invoice & sends PDF with DRAFT caption ---');
 {
-  await sendTestMessage({ text: 'VK\nred lenzo alloy 18 inch x 4\nrate 5200', messageId: 106 });
+  await sendTestMessage({ text: 'VK\nred lenzo alloy 18 inch x 4\nrate 5200', messageId: baseId + 6 });
   const docCall = sentCalls.find(c => c.method === 'sendDocument');
   assert(createdInvoiceCount > 0, 'Called stubbed invoice creator function');
   assert(docCall && docCall.payload.caption.includes('DRAFT'), 'Sent document with DRAFT mentioned in caption');
-  assert(docCall && docCall.payload.reply_parameters?.message_id === 106, 'Document quoted original message ID');
+  assert(docCall && docCall.payload.reply_parameters?.message_id === baseId + 6, 'Document quoted original message ID');
 }
 
 console.log(`\nAll adapter tests completed: ${passed}/${total} assertions passed.`);
