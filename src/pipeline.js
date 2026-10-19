@@ -68,6 +68,10 @@ export async function loadCatalogAndAliases({ live = false, force = false } = {}
       try {
         const catBuf = await readFile(new URL('../data/catalog-snapshot.json', import.meta.url), 'utf8');
         defaultCatalog = JSON.parse(catBuf);
+        const snapshotDate = defaultCatalog.fetchedAt || 'unknown date';
+        if (live) {
+          console.warn(`\n⚠️  WARNING: Zoho unreachable at startup. Using catalogue snapshot from ${snapshotDate}. Data may be stale.\n`);
+        }
       } catch {
         defaultCatalog = { customers: [], items: [] };
       }

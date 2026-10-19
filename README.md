@@ -359,7 +359,7 @@ results/
 
 **No multi-line clarification merge.** If two lines in one message both need clarification, the agent asks about both at once. If the rep answers one, the next message is still treated fresh.
 
-**Catalogue is static.** The snapshot is taken once. If items or customers are added to Zoho Books, the bot needs a restart to pick them up. A periodic re-fetch (every hour, say) would keep it current.
+**Catalogue snapshot fallback.** If Zoho is unreachable at startup, the bot falls back to the last saved snapshot and logs a warning. Until the next successful sync (up to 30 minutes), matches may reflect an out-of-date catalogue. Note: live fetches only update the in-memory cache and never overwrite `data/catalog-snapshot.json`, preserving evaluation reproducibility.
 
 **"Rate same as last time" is implemented but limited.** `src/zoho.js` has `getLastItemRate()` which queries the customer's invoice history. It works when the customer has a prior invoice for that item. If they don't, the agent falls back to asking for the rate.
 
