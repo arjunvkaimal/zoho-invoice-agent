@@ -92,7 +92,7 @@ The task asked for WhatsApp using Baileys, on a spare number. I didn't do that, 
 - **I don't have a spare number.** Baileys needs a real WhatsApp account to scan a QR code with. I had no spare SIM or second phone.
 - **I wasn't willing to link my personal number.** Baileys is an unofficial, reverse-engineered client. Using it goes against WhatsApp's terms and numbers can be banned. Losing my own number wasn't a risk worth taking for a prototype.
 - **Temporary-number websites aren't a real fix.** They often fail WhatsApp's verification, and you lose the account when the rental ends, which is a bad foundation for a demo.
-- **I asked, and the recruiter said Telegram was fine.**
+
 
 Telegram turned out to be a good stand-in. The Bot API is official and free, bots can live in real groups with several people, and there's no ban risk. That let me show the actual workflow (a group of reps and a bot) honestly.
 
