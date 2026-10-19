@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/whatsapp.js",
     "start:telegram": "node src/telegram.js",
+    "dashboard": "node -e \"import('./src/dashboard.js').then(d => d.startDashboard())\"",
     "chat": "node src/chat.js",
     "eval": "node src/eval.js",
     "report": "node src/report.js",
@@ -18,6 +19,7 @@
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc14",
     "dotenv": "^18.0.8",
+    "express": "^5.3.0",
     "grammy": "^1.46.0",
     "pino": "^10.4.0",
     "qrcode-terminal": "^0.12.0"

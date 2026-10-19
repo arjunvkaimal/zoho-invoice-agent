@@ -3,6 +3,8 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { Bot, InputFile } from 'grammy';
 import { processMessage, createFromDecision, loadCatalogAndAliases, startPeriodicCatalogRefresh } from './pipeline.js';
+import { addLogEntry } from './logger.js';
+import { startDashboard } from './dashboard.js';
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const ALLOWED_CHAT_ID = process.env.ALLOWED_CHAT_ID ? String(process.env.ALLOWED_CHAT_ID).trim() : null;
@@ -133,9 +135,23 @@ export function createTelegramBot(options = {}) {
         console.log(`[PARSED]: Intent=${res.parsed.intent}, Customer="${res.parsed.customer_text}", Lines=${res.parsed.lines.length}`);
         console.log(`[ACTION]: ${decision.action.toUpperCase()} (${latencyMs}ms)`);
 
+        // Common log fields
+        const logBase = {
+          source: 'telegram',
+          sender,
+          text,
+          intent: res.parsed.intent,
+          customer: res.parsed.customer_text,
+          lines: res.parsed.lines,
+          action: decision.action,
+          reason: decision.reason || null,
+          latencyMs,
+        };
+
         // Action: IGNORE
         if (decision.action === 'ignore') {
           console.log(`[IGNORE] Staying silent: ${decision.reason}`);
+          addLogEntry(logBase);
           return;
         }
 
@@ -143,6 +159,7 @@ export function createTelegramBot(options = {}) {
         if (decision.action === 'unsupported') {
           const replyText = decision.reply || decision.message || 'This request cannot be processed automatically.';
           console.log(`[UNSUPPORTED] Replying: "${replyText}"`);
+          addLogEntry(logBase);
           await ctx.reply(replyText, {
             reply_parameters: { message_id: messageId },
           });
@@ -155,6 +172,7 @@ export function createTelegramBot(options = {}) {
             `❓ Clarification needed:\n` + decision.questions.map((q) => `• ${q}`).join('\n')
           );
           console.log(`[CLARIFY] Replying with questions`);
+          addLogEntry(logBase);
           await ctx.reply(replyText, {
             reply_parameters: { message_id: messageId },
           });
@@ -169,6 +187,11 @@ export function createTelegramBot(options = {}) {
           });
 
           console.log(`[CREATED] Invoice: ${invoice.invoice_number} (ID: ${invoice.invoice_id}) | Latency: ${latencyMs}ms`);
+
+          addLogEntry({
+            ...logBase,
+            invoiceNumber: invoice.invoice_number,
+          });
 
           const linesSummary = decision.lines
             .map((l) => `• ${l.quantity} x ${l.item.name} @ ₹${l.rate.toLocaleString('en-IN')}`)
@@ -195,6 +218,19 @@ export function createTelegramBot(options = {}) {
         // No silent failures
         const cleanErr = sanitizeError(err.message);
         console.error(`[ERROR] Processing failed for message from ${sender}:`, cleanErr);
+
+        addLogEntry({
+          source: 'telegram',
+          sender,
+          text,
+          intent: 'error',
+          customer: null,
+          lines: [],
+          action: 'error',
+          reason: cleanErr,
+          latencyMs: Date.now() - startTime,
+        });
+
         const apology = `⚠️ Sorry, I could not process that invoice request right now due to a system error. Please retry or contact the accountant.`;
         try {
           await ctx.reply(apology, {
@@ -229,6 +265,10 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   } catch (err) {
     console.warn(`[Catalog Warning] Startup sync issue: ${err.message}. Proceeding with cached snapshot.`);
   }
+
+  // 3. Start minimal web UI / real-time log dashboard
+  const DASHBOARD_PORT = process.env.PORT || 3000;
+  startDashboard(DASHBOARD_PORT);
 
   const bot = createTelegramBot();
   bot.start({

@@ -168,7 +168,8 @@ ALLOWED_CHAT_ID=
 
 | Task | Command |
 |:---|:---|
-| Telegram bot (group chat) | `npm run start:telegram` |
+| Telegram bot + live web UI log | `npm run start:telegram` (dashboard at `http://localhost:3000`) |
+| Standalone web UI log viewer | `npm run dashboard` |
 | Terminal simulator (dry-run mode) | `npm run chat` |
 | Terminal simulator (creates real Zoho drafts) | `node src/chat.js --create` |
 | Run evaluation benchmark | `npm run eval` |
@@ -322,6 +323,8 @@ src/
   pipeline.js     — Decision logic, live catalogue caching and refresh
   zoho.js         — Zoho Books API client, token refresh, and PDF download
   telegram.js     — Telegram group bot adapter with sequential queue
+  dashboard.js    — Minimal real-time web UI log viewer (SSE)
+  logger.js       — In-memory message and transaction event store
   chat.js         — Terminal simulator with dry-run and live creation modes
   whatsapp.js     — Baileys listener reference implementation
   seed.js         — Seeds sample master data in Zoho Books
