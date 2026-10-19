@@ -17,7 +17,7 @@ If the rep sends something vague like `VK red wheel 4`, it won't pick an item on
 
 ---
 
-> **Channel note:** The original brief requested WhatsApp via Baileys. I implemented and demoed this using Telegram instead, with approval from the recruiter. The reasoning is explained in [Why Telegram instead of WhatsApp](#why-telegram-instead-of-whatsapp).
+> **Channel note:** The original brief requested WhatsApp via Baileys. I implemented and demoed this using Telegram instead. The reasoning is explained in [Why Telegram instead of WhatsApp](#why-telegram-instead-of-whatsapp).
 >
 > Demo video (2–4 min): _add link here_
 
@@ -92,7 +92,6 @@ The assignment suggested WhatsApp with Baileys using a spare number. I chose Tel
 - **No spare phone number:** Baileys requires scanning a QR code with an active WhatsApp account on a physical device. I did not have a secondary SIM or spare phone.
 - **Risk to personal number:** Baileys reverse-engineers WhatsApp's private protocol. Using automated bots on personal numbers violates WhatsApp terms and frequently leads to bans.
 - **Virtual numbers are unreliable:** Online disposable number services often fail WhatsApp OTP verification or expire quickly, making them unviable for reliable testing and demos.
-- **Recruiter approved:** I checked in advance and received approval to use Telegram for the demonstration.
 
 Telegram provided an official, reliable Bot API with native group support and zero risk of account suspension, allowing the full multi-user sales rep flow to be demonstrated cleanly.
 
