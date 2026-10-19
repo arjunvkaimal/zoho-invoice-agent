@@ -366,7 +366,7 @@ export async function createFromDecision(decision, meta = {}) {
   const invoice = await createInvoice({
     customerId: decision.customer.contact_id,
     lineItems,
-    notes: 'Created automatically via WhatsApp Sales Rep Agent',
+    notes: 'Created automatically via Invoice Agent',
     referenceNumber: meta.ref || undefined,
   });
 

@@ -14,7 +14,7 @@ for (const file of files) {
   reports.push(JSON.parse(content));
 }
 
-let md = `# Evaluation Report: WhatsApp -> Zoho Books Invoice Agent
+let md = `# Evaluation Report: Chat -> Zoho Books Invoice Agent
 
 **Generated**: ${new Date().toISOString()}  
 **Test Suite**: 45 ground-truth messages (32 Dev / 13 Holdout) across 5 sales rep personas  

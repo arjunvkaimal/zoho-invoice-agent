@@ -3,7 +3,7 @@ import 'dotenv/config';
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const SYSTEM_PROMPT = `You are a strict data extraction parser for WhatsApp messages sent to an accounting firm by auto-parts sales reps.
+const SYSTEM_PROMPT = `You are a strict data extraction parser for sales-rep chat messages sent to an accounting firm.
 Your job is ONLY to extract raw text entities and quantities into a structured JSON object.
 DO NOT resolve names to catalog records. DO NOT make business decisions. DO NOT guess missing values.
 

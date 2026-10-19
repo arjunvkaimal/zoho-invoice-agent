@@ -6,7 +6,7 @@ import { processMessage, createFromDecision, loadCatalogAndAliases } from './pip
 const ACTUALLY_CREATE = process.argv.includes('--create');
 
 console.log('===============================================================');
-console.log('WhatsApp / Telegram Sales Rep Terminal Simulator');
+console.log('Sales Rep Invoice Agent Terminal Simulator');
 console.log(`Mode: ${ACTUALLY_CREATE ? 'LIVE CREATION (--create: real Zoho draft invoices will be created)' : 'DRY-RUN (Default: no real Zoho invoices will be created)'}`);
 console.log('Type any message as a sales rep and press Enter.');
 console.log('Type "exit" or "quit" to stop.');
