@@ -187,53 +187,55 @@ ALLOWED_CHAT_ID=
 
 ## Master data in Zoho
 
-`node src/seed.js` creates ten customers and twenty items in Zoho Books. Running it again is safe; it skips anything that already exists.
+> **In a real business deployment, this step is skipped entirely.** The agent reads whatever customers and items already exist in the client's Zoho Books org — no catalogue setup needed. `seed.js` only exists because this demo uses a blank trial org that needed realistic data to test against.
+
+`node src/seed.js` creates the demo customers and items below. Running it again is safe; it skips anything that already exists.
 
 <details>
-<summary>Ten customers</summary>
+<summary>Ten customers (actual live catalogue)</summary>
 
-| Name | State |
-|:---|:---|
-| VK Enterprises | Kerala |
-| Sharma Motors | Maharashtra |
-| Sharma Tyres | Maharashtra |
-| Rajan Wheels | Tamil Nadu |
-| Kerala Tyre Mart | Kerala |
-| Malabar Auto Parts | Kerala |
-| Chennai Wheel House | Tamil Nadu |
-| Bangalore Motors Hub | Karnataka |
-| Hyderabad Tyre World | Telangana |
-| Delhi Rim Centre | Delhi |
+| Name |
+|:---|
+| City Wheel Hub |
+| Gupta Auto |
+| Gupta Auto Spares |
+| Joseph & Sons |
+| Kerala Tyre Mart |
+| Mohan Auto Traders |
+| Rajan Wheels |
+| Sharma Motors |
+| Sharma Tyres |
+| VK Enterprises |
 
 </details>
 
 <details>
-<summary>Twenty items</summary>
+<summary>Twenty items (actual live catalogue)</summary>
 
 All items are tyre and wheel accessories with GST at 28%.
 
 | Name | Rate (₹) |
 |:---|---:|
-| Tyre 195/65R15 | 3,800 |
+| Alloy Wheel 16" Lenzo - Black | 4,400 |
+| Alloy Wheel 17" Lenzo - Black | 4,800 |
+| Alloy Wheel 17" Lenzo - Red | 4,900 |
+| Alloy Wheel 17" Lenzo - Silver | 4,850 |
+| Alloy Wheel 17" Vossen - Black | 6,200 |
+| Alloy Wheel 17" Vossen - Gunmetal | 6,300 |
+| Alloy Wheel 18" Lenzo - Black | 5,300 |
+| Alloy Wheel 18" Lenzo - Red | 5,400 |
+| Alloy Wheel 18" Lenzo - Silver | 5,350 |
+| Alloy Wheel 18" Lenzo Sport - Red | 5,600 |
+| Alloy Wheel 18" Vossen - Black | 6,900 |
+| Alloy Wheel 18" Vossen - Gunmetal | 7,000 |
+| Steel Wheel 15" Standard - Black | 1,950 |
+| Steel Wheel 15" Standard - Silver | 1,900 |
 | Tyre 205/55R16 | 4,200 |
 | Tyre 215/55R17 | 4,900 |
-| Tyre 225/45R18 | 5,600 |
-| Alloy Wheel 15" Lenzo - Black | 3,500 |
-| Alloy Wheel 15" Lenzo - Silver | 3,500 |
-| Alloy Wheel 17" Lenzo - Red | 4,500 |
-| Alloy Wheel 17" Vossen - Black | 4,800 |
-| Alloy Wheel 18" Lenzo - Red | 5,200 |
-| Alloy Wheel 18" Vossen - Black | 5,500 |
+| Wheel Cap Lenzo - Black | 250 |
 | Wheel Cap Lenzo - Red | 250 |
-| Wheel Cap Vossen - Black | 280 |
-| Wheel Cap OEM - Silver | 200 |
-| Nitrogen Inflation (per tyre) | 50 |
-| Wheel Balancing (per wheel) | 150 |
-| Tyre Rotation (set of 4) | 400 |
-| Tyre Puncture Repair | 120 |
-| Valve Stem Set (4 pcs) | 80 |
-| Wheel Alignment | 600 |
-| Rim Cleaning & Polishing | 350 |
+| Wheel Nut Set Black | 480 |
+| Wheel Nut Set Chrome | 450 |
 
 </details>
 
