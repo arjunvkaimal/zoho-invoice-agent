@@ -6,8 +6,8 @@ import { processMessage, createFromDecision, loadCatalogAndAliases } from './pip
 const ACTUALLY_CREATE = process.argv.includes('--create');
 
 console.log('===============================================================');
-console.log('🤖 WhatsApp / Telegram Sales Rep Terminal Simulator');
-console.log(`Mode: ${ACTUALLY_CREATE ? '⚡ LIVE CREATION (--create: real Zoho draft invoices will be created)' : '🛡️ DRY-RUN (Default: no real Zoho invoices will be created)'}`);
+console.log('WhatsApp / Telegram Sales Rep Terminal Simulator');
+console.log(`Mode: ${ACTUALLY_CREATE ? 'LIVE CREATION (--create: real Zoho draft invoices will be created)' : 'DRY-RUN (Default: no real Zoho invoices will be created)'}`);
 console.log('Type any message as a sales rep and press Enter.');
 console.log('Type "exit" or "quit" to stop.');
 console.log('===============================================================\n');
@@ -70,16 +70,16 @@ try {
           const pdfPath = new URL(`../invoices/${invoice.invoice_number}.pdf`, import.meta.url);
           await writeFile(pdfPath, pdfBuffer);
 
-          console.log(`Agent > ✅ Invoice ${invoice.invoice_number} created for ${decision.customer.name} (DRAFT)`);
+          console.log(`Agent > Invoice ${invoice.invoice_number} created for ${decision.customer.name} (DRAFT)`);
           for (const l of decision.lines) {
-            console.log(`        • ${l.quantity} x ${l.item.name} @ ₹${l.rate}`);
+            console.log(`        - ${l.quantity} x ${l.item.name} @ ₹${l.rate}`);
           }
           console.log(`        Total: ₹${invoice.total}`);
           console.log(`        Saved PDF to invoices/${invoice.invoice_number}.pdf\n`);
         }
       }
     } catch (err) {
-      console.error(`Agent > ⚠️ Error: ${err.message}\n`);
+      console.error(`Agent > Error: ${err.message}\n`);
     }
   }
 } finally {

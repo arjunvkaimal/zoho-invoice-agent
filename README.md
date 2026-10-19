@@ -8,7 +8,7 @@ VK red lenzo alloy 18 inch x 4 rate 5200
 ```
 the bot replies:
 ```
-✅ Invoice INV-000123 created for VK Enterprises (draft)
+Invoice INV-000123 created for VK Enterprises (draft)
    4 × Alloy Wheel 18" Lenzo - Red @ ₹5,200 = ₹20,800 (+GST)
    [invoice PDF]
 ```

@@ -190,7 +190,7 @@ export function startDashboard(port = 3000) {
   });
 
   const server = app.listen(port, () => {
-    console.log(`📊 Dashboard running at http://localhost:${port}`);
+    console.log(`Dashboard running at http://localhost:${port}`);
   });
 
   return server;

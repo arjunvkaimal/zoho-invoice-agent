@@ -50,9 +50,9 @@ function assert(condition, label) {
   total++;
   if (condition) {
     passed++;
-    console.log(`✓ ${label}`);
+    console.log(`[PASS] ${label}`);
   } else {
-    console.error(`✗ ${label}`);
+    console.error(`[FAIL] ${label}`);
   }
 }
 
@@ -123,7 +123,7 @@ console.log('\n--- Test 7: Clear order creates stubbed invoice & sends PDF with 
 
 console.log(`\nAll adapter tests completed: ${passed}/${total} assertions passed.`);
 if (passed === total) {
-  console.log('🎉 Telegram Adapter verified successfully!');
+  console.log('Telegram Adapter verified successfully.');
 } else {
   process.exit(1);
 }

@@ -70,7 +70,7 @@ export async function loadCatalogAndAliases({ live = false, force = false } = {}
         defaultCatalog = JSON.parse(catBuf);
         const snapshotDate = defaultCatalog.fetchedAt || 'unknown date';
         if (live) {
-          console.warn(`\n⚠️  WARNING: Zoho unreachable at startup. Using catalogue snapshot from ${snapshotDate}. Data may be stale.\n`);
+          console.warn(`\n[WARNING] Zoho unreachable at startup. Using catalogue snapshot from ${snapshotDate}. Data may be stale.\n`);
         }
       } catch {
         defaultCatalog = { customers: [], items: [] };
@@ -269,8 +269,8 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
   // Rule 3: Never create an invoice unless customer, every item, every quantity and every rate are resolved.
   if (questions.length > 0 || !resolvedCustomer || resolvedLines.length !== (parsed.lines?.length || 0)) {
     const reply = questions.length === 1
-      ? `❓ ${questions[0]}`
-      : `❓ Clarification needed:\n` + questions.map((q) => `• ${q}`).join('\n');
+      ? questions[0]
+      : `Clarification needed:\n` + questions.map((q) => `- ${q}`).join('\n');
 
     return {
       action: 'clarify',

@@ -86,8 +86,8 @@ export function createTelegramBot(options = {}) {
     if (!allowedChatId) {
       if (!SEEN_CHATS.has(chatIdStr)) {
         SEEN_CHATS.add(chatIdStr);
-        console.log(`\n📢 [Group Discovery] Received message in group: "${chatTitle}" (Chat ID: ${chatIdStr})`);
-        console.log(`👉 Add ALLOWED_CHAT_ID=${chatIdStr} to your .env file to bind the bot to this group.\n`);
+        console.log(`\n[Group Discovery] Received message in group: "${chatTitle}" (Chat ID: ${chatIdStr})`);
+        console.log(`Add ALLOWED_CHAT_ID=${chatIdStr} to your .env file to bind the bot to this group.\n`);
       }
       return;
     }
@@ -169,7 +169,7 @@ export function createTelegramBot(options = {}) {
         // Action: CLARIFY
         if (decision.action === 'clarify') {
           const replyText = decision.reply || (
-            `❓ Clarification needed:\n` + decision.questions.map((q) => `• ${q}`).join('\n')
+            `Clarification needed:\n` + decision.questions.map((q) => `- ${q}`).join('\n')
           );
           console.log(`[CLARIFY] Replying with questions`);
           addLogEntry(logBase);
@@ -194,11 +194,11 @@ export function createTelegramBot(options = {}) {
           });
 
           const linesSummary = decision.lines
-            .map((l) => `• ${l.quantity} x ${l.item.name} @ ₹${l.rate.toLocaleString('en-IN')}`)
+            .map((l) => `- ${l.quantity} x ${l.item.name} @ ₹${l.rate.toLocaleString('en-IN')}`)
             .join('\n');
 
           const caption =
-            `✅ *Invoice ${invoice.invoice_number} created for ${decision.customer.name} (DRAFT)*\n\n` +
+            `*Invoice ${invoice.invoice_number} created for ${decision.customer.name} (DRAFT)*\n\n` +
             `${linesSummary}\n\n` +
             `*Total:* ₹${Number(invoice.total || 0).toLocaleString('en-IN')}\n` +
             `_(Created as Draft in Zoho Books - pending accountant review)_`;
@@ -231,7 +231,7 @@ export function createTelegramBot(options = {}) {
           latencyMs: Date.now() - startTime,
         });
 
-        const apology = `⚠️ Sorry, I could not process that invoice request right now due to a system error. Please retry or contact the accountant.`;
+        const apology = `Sorry, I could not process that invoice request right now due to a system error. Please retry or contact the accountant.`;
         try {
           await ctx.reply(apology, {
             reply_parameters: { message_id: messageId },
@@ -251,7 +251,7 @@ import { fileURLToPath } from 'node:url';
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   console.log('Starting Telegram Sales Rep Bot adapter with long polling...');
   if (!TELEGRAM_BOT_TOKEN) {
-    console.error('❌ Error: TELEGRAM_BOT_TOKEN is not set in .env.');
+    console.error('Error: TELEGRAM_BOT_TOKEN is not set in .env.');
     console.error('Please create a bot with @BotFather on Telegram and add TELEGRAM_BOT_TOKEN to your .env file.');
     process.exit(1);
   }
@@ -261,7 +261,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     await loadCatalogAndAliases({ live: true });
     // 2. Start periodic background refresh every 30 minutes
     startPeriodicCatalogRefresh(30 * 60 * 1000);
-    console.log('🔄 Periodic catalogue auto-refresh enabled (every 30 mins).');
+    console.log('Periodic catalogue auto-refresh enabled (every 30 mins).');
   } catch (err) {
     console.warn(`[Catalog Warning] Startup sync issue: ${err.message}. Proceeding with cached snapshot.`);
   }
@@ -273,7 +273,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const bot = createTelegramBot();
   bot.start({
     onStart: (botInfo) => {
-      console.log(`✅ Telegram bot @${botInfo.username} is active and listening for group messages!`);
+      console.log(`Telegram bot @${botInfo.username} is active and listening for group messages!`);
       if (ALLOWED_CHAT_ID) {
         console.log(`[Telegram] Locked to ALLOWED_CHAT_ID: ${ALLOWED_CHAT_ID}`);
       } else {
