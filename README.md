@@ -32,6 +32,7 @@ If the rep sends something vague like `VK red wheel 4`, it won't pick an item on
 - [Master data in Zoho](#master-data-in-zoho)
 - [Evaluation](#evaluation)
 - [Design decisions](#design-decisions)
+- [Onboarding a new client](#onboarding-a-new-client)
 - [Limitations and future improvements](#limitations-and-future-improvements)
 
 ---
@@ -340,6 +341,26 @@ results/
   REPORT.md       — Detailed evaluation report
   CHANGELOG.md    — Run history log
 ```
+
+---
+
+## Onboarding a new client
+
+Today, this prototype is configured for a single wheel and tyre trader through a single `.env` file. Onboarding a new client requires moving from this single-tenant setup to a multi-client architecture:
+
+1. **Per-client configuration & credentials:** Instead of one `.env` with a Self Client, each client needs their own Zoho OAuth authorisation, organisation ID, data centre domain (`.in`, `.com`, `.eu`), chat group ID, tax rules, and secrets stored in a secure vault.
+2. **Catalogue loading & scaling:** The live catalogue fetch (`src/pipeline.js`) already queries any Zoho Books organisation dynamically; `master-data.json` and `catalog-snapshot.json` were created purely for my offline evaluation. For production, catalogues must be cached per tenant. Because Zoho API limits are per-organisation (typically 100 calls/min), clients with thousands of items will need an indexed search (e.g. SQLite FTS or BM25) before fuzzy matching.
+3. **Generalising client-specific assumptions (Future Work):**
+   - *LLM Prompt:* Currently includes wheel-trading examples and auto-parts context in `src/llm.js`. Generalise by injecting a configurable short business description and sampling few-shot examples directly from the client's Zoho contacts.
+   - *Stop-words & units:* `src/matcher.js` hardcodes wheel terms (`wheel`, `alloy`, `blk`, `slv`) and inches. Generalise by dynamically down-weighting tokens appearing in >30% of the client's catalogue and configuring units per client.
+   - *Thresholds:* The 0.60/0.80 scoring thresholds were tuned on my 45 wheel messages; they should be re-calibrated on the new client's data.
+4. **Cold start & aliases:** New clients start with an empty alias dictionary. Bootstrap initial customer-item pairings and typical pricing from the client's past Zoho invoice history. Shorthand used by sales reps should be learned incrementally with accountant approval.
+5. **Client-specific evaluation:** Before going live, collect 50+ historical chat messages from the client's sales team paired with actual accountant-approved invoices. Split into dev and holdout sets, running the evaluation harness to verify a 0% Confidently Wrong rate.
+6. **Staged rollout:** Deploy in shadow mode first (the bot evaluates orders and drafts in silence for accountant review). Move next to draft-only replies with PDF review in group chat, before enabling deeper automation.
+7. **Accounting variations:** Accommodate differences across clients: Indian GST vs foreign VAT or US sales tax, place-of-supply resolution, line-item discounts, multi-currency, custom fields (like pharmaceutical batch/expiry numbers), and credit limits.
+8. **Tenant isolation:** Enforce strict per-client isolation across message queues, catalogue caches, alias files, and audit logs.
+
+Only the wheel catalogue has been tested; behaviour on other businesses is untested.
 
 ---
 
