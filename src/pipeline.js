@@ -5,6 +5,7 @@ import { getContacts, getItems, createInvoice, getInvoicePdf, getCustomerInvoice
 
 let defaultCatalog = null;
 let defaultAliases = null;
+let defaultClientConfig = null;
 let lastCatalogFetchTime = 0;
 let refreshTimer = null;
 
@@ -88,7 +89,17 @@ export async function loadCatalogAndAliases({ live = false, force = false } = {}
     }
   }
 
-  return { catalog: defaultCatalog, aliases: defaultAliases };
+  // 3. Client config loading
+  if (!defaultClientConfig || force) {
+    try {
+      const cfgBuf = await readFile(new URL('../data/client-config.json', import.meta.url), 'utf8');
+      defaultClientConfig = JSON.parse(cfgBuf);
+    } catch {
+      defaultClientConfig = { rate_deviation: 0.5 };
+    }
+  }
+
+  return { catalog: defaultCatalog, aliases: defaultAliases, config: defaultClientConfig };
 }
 
 /**

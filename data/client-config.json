@@ -1,0 +1,23 @@
+{
+  "business_description": "You are a strict data extraction parser for sales-rep chat messages sent to an accounting firm.",
+  "item_stop_words": [
+    "wheel",
+    "alloy",
+    "standard",
+    "set"
+  ],
+  "customer_stop_words": [
+    "enterprises",
+    "hub",
+    "mart"
+  ],
+  "token_aliases": {
+    "blk": "black",
+    "slv": "silver",
+    "slvr": "silver",
+    "whl": "wheels",
+    "whls": "wheels",
+    "motrs": "motors"
+  },
+  "rate_deviation": 0.5
+}

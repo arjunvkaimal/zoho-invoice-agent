@@ -3,6 +3,33 @@
  * No external dependencies.
  */
 
+import { readFileSync } from 'node:fs';
+
+let clientConfig = null;
+try {
+  const cfgBuf = readFileSync(new URL('../data/client-config.json', import.meta.url), 'utf8');
+  clientConfig = JSON.parse(cfgBuf);
+} catch {
+  clientConfig = null;
+}
+
+const DEFAULT_ITEM_STOP = ['wheel', 'alloy', 'standard', 'set'];
+const DEFAULT_CUSTOMER_STOP = ['enterprises', 'hub', 'mart'];
+const DEFAULT_TOKEN_ALIASES = {
+  blk: 'black',
+  slv: 'silver',
+  slvr: 'silver',
+  whl: 'wheels',
+  whls: 'wheels',
+  motrs: 'motors',
+};
+
+const tokenAliases = clientConfig?.token_aliases || DEFAULT_TOKEN_ALIASES;
+const GENERIC_WORDS = new Set([
+  ...(clientConfig?.item_stop_words || DEFAULT_ITEM_STOP),
+  ...(clientConfig?.customer_stop_words || DEFAULT_CUSTOMER_STOP),
+]);
+
 export const THRESHOLDS = {
   MIN_SCORE: 0.6,
   CONFIDENT_SCORE: 0.8,
@@ -12,15 +39,17 @@ export const THRESHOLDS = {
 // Standardize terms like '18 inch', '18in', '18"', '18-inch'
 export function normalizeText(str) {
   if (!str) return '';
-  return str
+  let s = str
     .toLowerCase()
     .replace(/\\/g, ' ')
     .replace(/\b(\d+)\s*(inch|in|-inch)\b/g, '$1')
-    .replace(/["']/g, '')
-    .replace(/\bblk\b/g, 'black')
-    .replace(/\b(slv|slvr)\b/g, 'silver')
-    .replace(/\bwhls?\b/g, 'wheels')
-    .replace(/\bmotrs\b/g, 'motors')
+    .replace(/["']/g, '');
+
+  for (const [k, v] of Object.entries(tokenAliases)) {
+    s = s.replace(new RegExp(`\\b${k}\\b`, 'g'), v);
+  }
+
+  return s
     .replace(/[\-,\/#!$%\^&\*;:{}=\_`~()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -111,7 +140,7 @@ export function computeSimilarity(query, target) {
 
   // Token precision: target tokens covered by query
   // Generic filler words don't penalize heavily if omitted by the rep
-  const genericWords = new Set(['wheel', 'alloy', 'standard', 'set', 'enterprises', 'hub', 'mart']);
+  const genericWords = GENERIC_WORDS;
   let tMatchedSum = 0;
   let unmentionedSpecificTokens = 0;
 
