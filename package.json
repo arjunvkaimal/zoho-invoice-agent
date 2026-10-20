@@ -9,6 +9,7 @@
     "start:telegram": "node src/telegram.js",
     "dashboard": "node -e \"import('./src/dashboard.js').then(d => d.startDashboard())\"",
     "chat": "node src/chat.js",
+    "chat:electronics": "node src/chat-electronics.js",
     "eval": "node src/eval.js",
     "report": "node src/report.js",
     "snapshot": "node src/snapshot.js"
