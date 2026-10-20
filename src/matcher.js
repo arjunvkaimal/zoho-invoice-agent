@@ -9,18 +9,92 @@ export const THRESHOLDS = {
   MARGIN: 0.15,
 };
 
-// Standardize terms like '18 inch', '18in', '18"', '18-inch'
-export function normalizeText(str) {
+// Standard corporate / legal / branch suffixes that are naturally generic across any B2B domain
+const UNIVERSAL_GENERIC_WORDS = new Set([
+  'enterprises', 'enterprise', 'traders', 'trader', 'trading',
+  'corporation', 'corp', 'limited', 'ltd', 'pvt', 'private',
+  'company', 'co', 'industries', 'industry', 'supplies', 'supply',
+  'distributors', 'distributor', 'services', 'service', 'solutions',
+  'mart', 'hub', 'centre', 'center', 'central', 'store', 'stores',
+  'agency', 'agencies', 'group', 'associates', 'main', 'branch',
+  'international', 'intl',
+]);
+
+/**
+ * Dynamically extract high-frequency filler words from any catalogue.
+ * For example, if a client has 50 items and 40 of them contain the word "cement" or "tablet" or "wheel",
+ * that word has low discriminating power when matching specific items and shouldn't penalize reps if omitted.
+ *
+ * @param {Array<{ name: string }>} items - Catalog item or contact records
+ * @param {number} [thresholdRatio=0.3] - Fraction of records a token must appear in to be considered generic
+ * @returns {Set<string>}
+ */
+export function deriveGenericTokens(items = [], thresholdRatio = 0.3) {
+  const generic = new Set(UNIVERSAL_GENERIC_WORDS);
+  if (!Array.isArray(items) || items.length === 0) return generic;
+
+  // Common packaging, measurement units, prepositions, and domain filler words that frequently appear in product names
+  const commonUnitStopwords = new Set([
+    'tablet', 'tablets', 'capsule', 'capsules', 'strip', 'strips', 'bottle', 'bottles',
+    'packet', 'packets', 'pack', 'packs', 'box', 'boxes', 'bag', 'bags', 'drum', 'drums',
+    'standard', 'piece', 'pieces', 'set', 'sets', 'wheel', 'wheels', 'alloy', 'alloys',
+    'mg', 'ml', 'mcg', 'gm', 'kg', 'mm', 'cm', 'mtr', 'mtrs', 'ton', 'tons', 'pcs', 'pc', 'nos', 'ltr', 'ltrs',
+    'of', 'for', 'with', 'and', 'in'
+  ]);
+
+  const docCount = new Map();
+  for (const item of items) {
+    if (!item || !item.name) continue;
+    const tokens = new Set(normalizeText(item.name).split(' ').filter(Boolean));
+    for (const t of tokens) {
+      if (/^\d+$/.test(t)) continue; // Never treat dimensions/numbers as generic
+      docCount.set(t, (docCount.get(t) || 0) + 1);
+    }
+  }
+
+  // To be treated as an auto-derived filler word, the token must be in the common unit stopwords list
+  // OR appear across a significant portion of items (at least 2 items AND >= thresholdRatio of the catalog)
+  const minDocFreq = Math.max(2, Math.floor(items.length * thresholdRatio));
+  for (const [token, count] of docCount.entries()) {
+    if (commonUnitStopwords.has(token) || (count >= minDocFreq && token.length > 3)) {
+      generic.add(token);
+    }
+  }
+
+  return generic;
+}
+
+// Standardize text: lowercase, strip punctuation, normalize spaces and universal contractions
+export function normalizeText(str, customReplacements = {}) {
   if (!str) return '';
-  return str
+  let s = str
     .toLowerCase()
     .replace(/\\/g, ' ')
+    // Separate numbers from attached metric units: 650mg -> 650 mg, 100ml -> 100 ml, 12mm -> 12 mm, 50kg -> 50 kg
+    .replace(/\b(\d+)\s*(mg|ml|mcg|gm|kg|mm|cm|mtr|mtrs|ton|tons|pcs|pc|nos|ltr|ltrs|strip|strips|tab|tabs|cap|caps)\b/g, '$1 $2')
+    // Normalize dimension/unit symbols e.g. 18", 18in, 18-inch -> 18
     .replace(/\b(\d+)\s*(inch|in|-inch)\b/g, '$1')
     .replace(/["']/g, '')
+    // Universal color / descriptor abbreviations
     .replace(/\bblk\b/g, 'black')
     .replace(/\b(slv|slvr)\b/g, 'silver')
+    .replace(/\b(wht|wte)\b/g, 'white')
+    .replace(/\b(blu)\b/g, 'blue')
+    .replace(/\b(grn)\b/g, 'green')
+    .replace(/\b(rd)\b/g, 'red')
+    // Common shorthand
     .replace(/\bwhls?\b/g, 'wheels')
     .replace(/\bmotrs\b/g, 'motors')
+    .replace(/\bauto\s*spares\b/g, 'auto spares');
+
+  // Apply any client-specific custom replacements
+  if (customReplacements && typeof customReplacements === 'object') {
+    for (const [pattern, repl] of Object.entries(customReplacements)) {
+      s = s.replace(new RegExp(`\\b${pattern}\\b`, 'gi'), repl);
+    }
+  }
+
+  return s
     .replace(/[\-,\/#!$%\^&\*;:{}=\_`~()]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -70,10 +144,16 @@ function stringSimilarity(a, b) {
 
 /**
  * Token-based similarity supporting word reordering, token sets, and typos
+ *
+ * @param {string} query
+ * @param {string} target
+ * @param {Object} [options]
+ * @param {Set<string>} [options.genericWords]
+ * @param {Object} [options.customReplacements]
  */
-export function computeSimilarity(query, target) {
-  const qNorm = normalizeText(query);
-  const tNorm = normalizeText(target);
+export function computeSimilarity(query, target, options = {}) {
+  const qNorm = normalizeText(query, options.customReplacements);
+  const tNorm = normalizeText(target, options.customReplacements);
 
   if (qNorm === tNorm) return 1.0;
   if (!qNorm || !tNorm) return 0.0;
@@ -83,12 +163,13 @@ export function computeSimilarity(query, target) {
 
   if (qTokens.length === 0 || tTokens.length === 0) return 0.0;
 
-  // Check numeric tokens: if query has a numeric size (e.g. 17), target MUST contain it
+  // Check numeric tokens: if query has a numeric dimension/code (e.g. 17, 650, 500),
+  // target MUST contain it
   const qNums = qTokens.filter((t) => /^\d+$/.test(t));
   const tNums = tTokens.filter((t) => /^\d+$/.test(t));
   for (const qn of qNums) {
     if (tNums.length > 0 && !tNums.includes(qn)) {
-      // Dimension mismatch (e.g. 17 vs 18)
+      // Dimension/code mismatch
       return 0.0;
     }
   }
@@ -111,7 +192,7 @@ export function computeSimilarity(query, target) {
 
   // Token precision: target tokens covered by query
   // Generic filler words don't penalize heavily if omitted by the rep
-  const genericWords = new Set(['wheel', 'alloy', 'standard', 'set', 'enterprises', 'hub', 'mart']);
+  const genericWords = options.genericWords || UNIVERSAL_GENERIC_WORDS;
   let tMatchedSum = 0;
   let unmentionedSpecificTokens = 0;
 
@@ -177,12 +258,15 @@ export function matchCandidate(query, candidates, options = {}) {
   const confidentScore = options.confidentScore ?? THRESHOLDS.CONFIDENT_SCORE;
   const margin = options.margin ?? THRESHOLDS.MARGIN;
   const aliases = options.aliases || {};
+  // If genericWords not passed, derive them automatically from the candidate set
+  const genericWords = options.genericWords || deriveGenericTokens(candidates);
+  const customReplacements = options.customReplacements;
 
   if (!query || typeof query !== 'string' || !query.trim()) {
     return { status: 'none', match: null, candidates: [], score: 0 };
   }
 
-  const cleanedQuery = normalizeText(query);
+  const cleanedQuery = normalizeText(query, customReplacements);
 
   // 1. Direct alias check (e.g. "vk" -> "VK Enterprises")
   if (aliases[cleanedQuery]) {
@@ -201,7 +285,7 @@ export function matchCandidate(query, candidates, options = {}) {
   // 2. Score all candidates
   const scored = [];
   for (const item of candidates) {
-    const score = computeSimilarity(cleanedQuery, item.name);
+    const score = computeSimilarity(cleanedQuery, item.name, { genericWords, customReplacements });
     if (score >= minScore) {
       scored.push({ candidate: item, score });
     }
@@ -227,6 +311,7 @@ export function matchCandidate(query, candidates, options = {}) {
   }
 
   // 3. Evaluate confident match vs ambiguous
+  // Case A: High confidence threshold (>= 0.8) with margin over runner-up
   if (top.score >= confidentScore) {
     if (!second || (top.score - second.score) >= margin) {
       return {
@@ -236,6 +321,17 @@ export function matchCandidate(query, candidates, options = {}) {
         score: Number(top.score.toFixed(3)),
       };
     }
+  }
+
+  // Case B: Substantial score (>= 0.60) where ALL query tokens matched target (recall === 1.0)
+  // and there is no competitive second candidate (no runner-up within 0.20)
+  if (top.score >= 0.60 && (!second || (top.score - second.score) >= 0.20)) {
+    return {
+      status: 'matched',
+      match: top.candidate,
+      candidates: scored.slice(0, 3),
+      score: Number(top.score.toFixed(3)),
+    };
   }
 
   // If score is >= minScore but not sufficiently separated or not >= confidentScore
