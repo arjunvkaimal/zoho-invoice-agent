@@ -68,7 +68,7 @@ The LLM is never asked to select a catalogue item or decide if an invoice should
 
 ### How matching works
 
-For any customer or item text, the matcher scores all records in the catalogue using token overlap and Levenshtein similarity, following this order:
+For each customer or item text in a message, the matcher scores all records in the catalogue using token overlap and Levenshtein similarity, following this order:
 
 1. **Known aliases:** Predefined shorthand (e.g. `vk` → `VK Enterprises`) matches immediately.
 2. **Exact token match:** Matches where all query tokens align with a single record.
@@ -349,13 +349,13 @@ results/
 Today, this prototype is configured for a single wheel and tyre trader through a single `.env` file. Onboarding a new client requires moving from this single-tenant setup to a multi-client architecture:
 
 1. **Per-client configuration & credentials:** Instead of one `.env` with a Self Client, each client needs their own Zoho OAuth authorisation, organisation ID, data centre domain (`.in`, `.com`, `.eu`), chat group ID, tax rules, and secrets stored in a secure vault.
-2. **Catalogue loading & scaling:** The live catalogue fetch (`src/pipeline.js`) already queries any Zoho Books organisation dynamically; `master-data.json` and `catalog-snapshot.json` were created purely for my offline evaluation. For production, catalogues must be cached per tenant. Because Zoho API limits are per-organisation (typically 100 calls/min), clients with thousands of items will need an indexed search (e.g. SQLite FTS or BM25) before fuzzy matching.
+2. **Catalogue loading & scaling:** The live catalogue fetch (`src/pipeline.js`) is not tied to this client's data, though it has only been run against one organisation; `master-data.json` and `catalog-snapshot.json` were created purely for my offline evaluation. For production, catalogues must be cached per tenant. Because limits apply per organisation and per plan; check Zoho's current limits for the client's plan, clients with thousands of items will need an indexed search (e.g. SQLite FTS or BM25) before fuzzy matching.
 3. **Generalising client-specific assumptions (Future Work):**
-   - *LLM Prompt:* Currently includes wheel-trading examples and auto-parts context in `src/llm.js`. Generalise by injecting a configurable short business description and sampling few-shot examples directly from the client's Zoho contacts.
-   - *Stop-words & units:* `src/matcher.js` hardcodes wheel terms (`wheel`, `alloy`, `blk`, `slv`) and inches. Generalise by dynamically down-weighting tokens appearing in >30% of the client's catalogue and configuring units per client.
+   - *LLM Prompt:* Currently includes wheel-trading examples and auto-parts context in `src/llm.js`. Generalise by injecting a short business description, and by building few-shot examples from the client's past chat messages paired with the invoices the accountant created.
+   - *Stop-words, token aliases & units:* Today, `src/matcher.js` handles only inches (`inch`, `in`, `-inch`, `"`, `'`) with no other units handled; hardcodes token replacements for four words (`blk` → `black`, `slv`/`slvr` → `silver`, `whls` → `wheels`, `motrs` → `motors`); and uses a single hardcoded stop-word set of seven words combining items and customers (`wheel`, `alloy`, `standard`, `set`, `enterprises`, `hub`, `mart`). Generalise by moving token aliases and units into per-client configuration, and by separating and tuning item and customer stop-words for the client's catalogue.
    - *Thresholds:* The 0.60/0.80 scoring thresholds were tuned on my 45 wheel messages; they should be re-calibrated on the new client's data.
 4. **Cold start & aliases:** New clients start with an empty alias dictionary. Bootstrap initial customer-item pairings and typical pricing from the client's past Zoho invoice history. Shorthand used by sales reps should be learned incrementally with accountant approval.
-5. **Client-specific evaluation:** Before going live, collect 50+ historical chat messages from the client's sales team paired with actual accountant-approved invoices. Split into dev and holdout sets, running the evaluation harness to verify a 0% Confidently Wrong rate.
+5. **Client-specific evaluation:** Before going live, collect 50+ historical chat messages from the client's sales team paired with actual accountant-approved invoices. Split into dev and holdout sets, running the evaluation harness and reporting every confidently-wrong case, aiming to keep them at zero, together with the sample size so the result is not over-read.
 6. **Staged rollout:** Deploy in shadow mode first (the bot evaluates orders and drafts in silence for accountant review). Move next to draft-only replies with PDF review in group chat, before enabling deeper automation.
 7. **Accounting variations:** Accommodate differences across clients: Indian GST vs foreign VAT or US sales tax, place-of-supply resolution, line-item discounts, multi-currency, custom fields (like pharmaceutical batch/expiry numbers), and credit limits.
 8. **Tenant isolation:** Enforce strict per-client isolation across message queues, catalogue caches, alias files, and audit logs.
