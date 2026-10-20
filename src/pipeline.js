@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { parseMessage } from './llm.js';
-import { matchCandidate, deriveGenericTokens } from './matcher.js';
+import { matchCandidate } from './matcher.js';
 import { getContacts, getItems, createInvoice, getInvoicePdf, getCustomerInvoices, getLastItemRate } from './zoho.js';
 
 let defaultCatalog = null;
@@ -184,9 +184,6 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
   const questions = [];
   let resolvedCustomer = null;
 
-  // Derive generic filler words dynamically from client catalog if available
-  const genericWords = catalog._genericWords || deriveGenericTokens(catalog.items || []);
-
   // 2. Resolve Customer
   if (!parsed.customer_text || !parsed.customer_text.trim()) {
     questions.push('Which customer/party should this invoice be raised for?');
@@ -221,7 +218,6 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
       } else {
         const itemMatch = matchCandidate(line.item_text, catalog.items, {
           aliases: aliases.items || {},
-          genericWords,
         });
 
         if (itemMatch.status === 'matched') {
