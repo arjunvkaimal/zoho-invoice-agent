@@ -152,7 +152,7 @@ export function stopPeriodicCatalogRefresh() {
  *   unresolved?: Object
  * }}
  */
-export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) {
+export function decide(parsed, catalog, aliases = { customers: {}, items: {} }, options = {}) {
   if (!parsed || !parsed.intent) {
     return { action: 'ignore', reason: 'Unrecognized or empty message structure' };
   }
@@ -201,6 +201,7 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
   } else {
     const custMatch = matchCandidate(parsed.customer_text, catalog.customers, {
       aliases: aliases.customers || {},
+      ...options,
     });
 
     if (custMatch.status === 'matched') {
@@ -229,6 +230,7 @@ export function decide(parsed, catalog, aliases = { customers: {}, items: {} }) 
       } else {
         const itemMatch = matchCandidate(line.item_text, catalog.items, {
           aliases: aliases.items || {},
+          ...options,
         });
 
         if (itemMatch.status === 'matched') {

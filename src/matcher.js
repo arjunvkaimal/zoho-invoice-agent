@@ -37,7 +37,7 @@ export const THRESHOLDS = {
 };
 
 // Standardize terms like '18 inch', '18in', '18"', '18-inch'
-export function normalizeText(str) {
+export function normalizeText(str, customAliases = tokenAliases) {
   if (!str) return '';
   let s = str
     .toLowerCase()
@@ -45,7 +45,7 @@ export function normalizeText(str) {
     .replace(/\b(\d+)\s*(inch|in|-inch)\b/g, '$1')
     .replace(/["']/g, '');
 
-  for (const [k, v] of Object.entries(tokenAliases)) {
+  for (const [k, v] of Object.entries(customAliases)) {
     s = s.replace(new RegExp(`\\b${k}\\b`, 'g'), v);
   }
 
@@ -100,9 +100,10 @@ function stringSimilarity(a, b) {
 /**
  * Token-based similarity supporting word reordering, token sets, and typos
  */
-export function computeSimilarity(query, target) {
-  const qNorm = normalizeText(query);
-  const tNorm = normalizeText(target);
+export function computeSimilarity(query, target, options = {}) {
+  const customAliases = options.tokenAliases || tokenAliases;
+  const qNorm = normalizeText(query, customAliases);
+  const tNorm = normalizeText(target, customAliases);
 
   if (qNorm === tNorm) return 1.0;
   if (!qNorm || !tNorm) return 0.0;
@@ -140,7 +141,7 @@ export function computeSimilarity(query, target) {
 
   // Token precision: target tokens covered by query
   // Generic filler words don't penalize heavily if omitted by the rep
-  const genericWords = GENERIC_WORDS;
+  const genericWords = options.genericWords || GENERIC_WORDS;
   let tMatchedSum = 0;
   let unmentionedSpecificTokens = 0;
 
@@ -211,7 +212,8 @@ export function matchCandidate(query, candidates, options = {}) {
     return { status: 'none', match: null, candidates: [], score: 0 };
   }
 
-  const cleanedQuery = normalizeText(query);
+  const customAliases = options.tokenAliases || tokenAliases;
+  const cleanedQuery = normalizeText(query, customAliases);
 
   // 1. Direct alias check (e.g. "vk" -> "VK Enterprises")
   if (aliases[cleanedQuery]) {
@@ -230,7 +232,7 @@ export function matchCandidate(query, candidates, options = {}) {
   // 2. Score all candidates
   const scored = [];
   for (const item of candidates) {
-    const score = computeSimilarity(cleanedQuery, item.name);
+    const score = computeSimilarity(cleanedQuery, item.name, options);
     if (score >= minScore) {
       scored.push({ candidate: item, score });
     }
